@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aditya University | Sentiment Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='aditya-logo.png') }}" alt="Aditya University logo" class="university-logo">
+                <div class="brand-text">
+                    <p class="eyebrow">Aditya University</p>
+                    <h1>Student Feedback Insights</h1>
+                </div>
+            </div>
+        </header>
+
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="section-tag">Campus Intelligence</p>
+                <h2>Analyze student opinions with real-time sentiment tracking.</h2>
+                <p>
+                    This platform helps Aditya University understand how students feel about academic life,
+                    campus services, faculty support, placements, and overall experience.
+                </p>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-box">
+                    <strong>24/7</strong>
+                    <span>Feedback Review</span>
+                </div>
+                <div class="stat-box">
+                    <strong>3 Modes</strong>
+                    <span>Positive / Negative / Neutral</span>
+                </div>
+                <div class="stat-box">
+                    <strong>Live</strong>
+                    <span>Sentiment Dashboard</span>
+                </div>
+            </div>
+        </section>
+
+        <main class="app-grid">
+            <section class="panel form-panel">
+                <div class="section-header">
+                    <h2>Analyze a student review</h2>
+                    <p>Paste a comment, review, or feedback message to check the sentiment.</p>
+                </div>
+
+                <form action="/" method="POST" class="analysis-form">
+                    <label for="comment">Student feedback</label>
+                    <textarea id="comment" name="comment" placeholder="Enter your comment here..." required>{{ comment }}</textarea>
+                    <button type="submit">Analyze Sentiment</button>
+                </form>
+            </section>
+
+            <aside class="panel info-panel">
+                <h2>What this analysis covers</h2>
+                <ul class="feature-list">
+                    <li><strong>Campus experience:</strong> hostels, library, events, and learning environment.</li>
+                    <li><strong>Academic sentiment:</strong> faculty support, course quality, and teaching experience.</li>
+                    <li><strong>Placement & careers:</strong> internship support, training, and outcomes.</li>
+                </ul>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="dot positive"></span>
+                        <span>Positive</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="dot negative"></span>
+                        <span>Negative</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="dot neutral"></span>
+                        <span>Neutral</span>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        {% if prediction %}
+        <section class="panel result-panel"
+                 data-prediction="{{ prediction }}"
+                 data-percentages='{{ percentages|tojson }}'>
+            <div class="result-heading">
+                <div class="result-badge {{ prediction|lower }}">{{ prediction }}</div>
+                <div class="result-copy">
+                    <h3>Sentiment result</h3>
+                    <p>The submitted student feedback is classified as <strong>{{ prediction }}</strong>.</p>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <canvas id="sentimentChart" aria-label="Sentiment chart"></canvas>
+                <div class="metric-grid">
+                    <div class="metric positive">
+                        <span class="metric-label">Positive</span>
+                        <strong>{{ percentages.positive }}%</strong>
+                    </div>
+                    <div class="metric negative">
+                        <span class="metric-label">Negative</span>
+                        <strong>{{ percentages.negative }}%</strong>
+                    </div>
+                    <div class="metric neutral">
+                        <span class="metric-label">Neutral</span>
+                        <strong>{{ percentages.neutral }}%</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submitted-text">
+                <h4>Submitted feedback</h4>
+                <p>{{ comment }}</p>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <script>
+        const resultSection = document.querySelector('.result-panel');
+        const prediction = resultSection ? resultSection.getAttribute('data-prediction') : '';
+
+        if (resultSection && prediction) {
+            const values = JSON.parse(resultSection.getAttribute('data-percentages'));
+
+            const metricEls = document.querySelectorAll('.metric strong');
+            const metricValues = [values.positive, values.negative, values.neutral];
+            metricEls.forEach((el, index) => {
+                el.textContent = `${metricValues[index]}%`;
+            });
+
+            new Chart(document.getElementById('sentimentChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Negative', 'Neutral'],
+                    datasets: [{
+                        data: [values.positive, values.negative, values.neutral],
+                        backgroundColor: ['#16a34a', '#dc2626', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { usePointStyle: true, color: '#243b53', padding: 18 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
